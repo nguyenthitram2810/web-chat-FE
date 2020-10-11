@@ -1,9 +1,8 @@
 <template>
-  <div class="d-flex flex-column">
+  <a-layout>
     <BaseHeader />
     <nuxt />
-    <BaseFooter />
-  </div>
+  </a-layout>
 </template>
 
 <script>
