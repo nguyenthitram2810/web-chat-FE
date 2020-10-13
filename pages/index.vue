@@ -8,44 +8,41 @@
 							<div class="message-head">
 								<h4>Chat Messages</h4>
 								<div class="more">
-									<div class="more-post-optns"><a-icon type="setting" />
+									<div class="more-post-optns"><a-icon type="form" />
 										<ul>
-											<li><i class="fa fa-wrench"></i>Setting</li>
-											<li><i class="fa fa-envelope-open"></i>Active Contacts</li>
-											<li><i class="fa fa-folder-open"></i>Archives Chats</li>
-											<li><i class="fa fa-eye-slash"></i>Unread Chats</li>
-											<li><i class="fa fa-flag"></i>Report a problem</li>
+											<li><a-icon type="user-add" />New user</li>
+											<li  @click="showModal"><a-icon type="usergroup-add" />New Conversation</li>
 										</ul>
 									</div>
 								</div>
 							</div>
 
 							<div class="message-people-srch">
-								<form method="post">
-									<input type="text" placeholder="Search Friend..">
-									<button type="submit"><i class="fa fa-search"></i></button>
-								</form>
-								<a-dropdown class="btn-group add-group align-right">
-                  <a-menu slot="overlay" @click="handleMenuClick">
-                    <a-menu-item key="1" class="dropdown-item"> <a-icon type="user-add" />New user</a-menu-item>
-                    <a-menu-item key="2" class="dropdown-item"> <a-icon type="usergroup-add" />New Group </a-menu-item>
-                  </a-menu>
-                  <a-button class="btn group dropdown-toggle" style="margin-left: 8px"> Create <a-icon type="down" /> </a-button>
-                </a-dropdown>
+								<a-input-search class="mb-3" v-model="txtSearchMessage" placeholder="Search Message.." style="width: 100%" @change="searchMessage" />
 							</div>
 
 							<div class="mesg-peple">
 								<ul class="nav nav-tabs nav-tabs--vertical msg-pepl-list">
-									<li class="nav-item unread">
-										<a class="active" href="#link1" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-online"></span>
+									<li class="nav-item unread" v-for="d in listConversations" :key="d._id">
+										<a @click="openConversation(d._id)" data-toggle="tab">
+											<figure>
+                        <img v-if="d.avatar != undefined" :src="d.avatar" alt="">
+                        <template v-else v-for="el in d.userIds">
+                          <img v-if="el._id != user._id" :key="el._id" :src="el.avatar">
+                        </template>
+												<!-- <span class="status"></span> -->
 											</figure>
 											<div class="user-name">
-												<h6 class="">Andrew</h6>
-												<span>you send a video - 2hrs ago</span>
+												<h6 class="" v-if="d.groupName != undefined">{{ d.groupName }}</h6>
+                        <h6 v-else>
+                          <template v-for="el in d.userIds">
+                            <span v-if="el._id != user._id"  :key="el._id"> {{ el.username }}</span>
+                          </template>
+                        </h6>
+												<span v-if="d.lastUser != undefined">{{ d.lastUser }}</span>
+                        <span v-if="d.lastMessage != undefined"> {{ d.lastMessage }}</span>
 											</div>
-											<div class="more">
+											<!-- <div class="more">
 												<div class="more-post-optns"><i class="ti-more-alt"></i>
 													<ul>
 														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
@@ -56,239 +53,15 @@
 														<li><i class="fa fa-envelope"></i>Mark Unread</li>
 													</ul>
 												</div>
-											</div>
+											</div> -->
 										</a>
-									</li>
-									<li class="nav-item ">
-										<a class="" href="#link2" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-away"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="unread">Jack Carter</h6>
-												<span>you send a audio - Tue</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item ">
-										<a class="" href="#link3" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-away"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="unread">Julie Robert</h6>
-												<span>hi, i am julie - wed</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item ">
-										<a class="" href="#link4" data-toggle="tab">
-                      <figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-offline"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="unread">Jhon Doe</h6>
-												<span>May i come to.. - Thr</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item unread ">
-										<a class="" href="#link5" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-offline"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="unread">Single Men</h6>
-												<span>hello? - a days ago</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item ">
-										<a class="" href="#link6" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-offline"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="unread">Sarah Jane</h6>
-												<span>she send a video - a days ago</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item ">
-										<a class="" href="#link7" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-offline"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="">Julie Robert</h6>
-												<span>She send a file - 22 jan</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item unread ">
-										<a class="" href="#link8" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-offline"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="unread">Frank Will</h6>
-												<span>You there ? - a days ago</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item ">
-										<a class="" href="#link9" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-offline"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="unread">Niclos Cage</h6>
-												<span>you send a video - wed</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
-									</li>
-									<li class="nav-item ">
-										<a class="" href="#link10" data-toggle="tab">
-											<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt="">
-												<span class="status f-offline"></span>
-											</figure>
-											<div class="user-name">
-												<h6 class="">kelly Quin</h6>
-												<span>Hi dude.. - 23 feb</span>
-											</div>
-											<div class="more">
-												<div class="more-post-optns"><i class="ti-more-alt"></i>
-													<ul>
-														<li><i class="fa fa-bell-slash-o"></i>Mute</li>
-														<li><i class="ti-trash"></i>Delete</li>
-														<li><i class="fa fa-folder-open-o"></i>Archive</li>
-														<li><i class="fa fa-ban"></i>Block</li>
-														<li><i class="fa fa-eye-slash"></i>Ignore Message</li>
-														<li><i class="fa fa-envelope"></i>Mark Unread</li>
-
-													</ul>
-												</div>
-											</div>
-										</a>
-
 									</li>
 								</ul>
 							</div>
 						</div>
+
 						<div class="tab-content messenger">
-							<div class="tab-pane active fade show " id="link1" >
+							<div class="tab-pane active fade show " >
 								<div class="row merged">
 									<div class="col-lg-12">
 										<div class="mesg-area-head">
@@ -320,50 +93,27 @@
 									<div class="col-lg-8 col-md-8">
 										<div class="mesge-area">
 											<ul class="conversations">
-												<li>
-													<!-- <figure><img src="images/resources/user1.jpg" alt=""></figure> -->
-													<div class="text-box">
-														<p>HI, i have faced a problem with your software. are you available now</p>
-														<span><i class="ti-check"></i><i class="ti-check"></i> 2:32PM</span>
-													</div>
-												</li>
 												<li class="me">
-													<!-- <figure><img src="images/resources/user2.jpg" alt=""></figure> -->
+													<figure><img :src="user.avatar" alt=""></figure>
 													<div class="text-box">
 														<p>HI, i have checked about your query, there is no any problem like that...</p>
 														<span><i class="ti-check"></i><i class="ti-check"></i> 2:35PM</span>
 													</div>
 												</li>
+
 												<li class="you">
-													<!-- <figure><img src="images/resources/user1.jpg" alt=""></figure> -->
+													<figure><img :src="user.avatar" alt=""></figure>
 													<div class="text-box">
 														<p>
 															thank you for your quick reply, i am sending you a screenshot
-															<!-- <img src="images/resources/screenshot-messenger.jpg" alt=""> -->
 															<em>Size: 106kb <ins>download Complete</ins></em>
 														</p>
 														<span><i class="ti-check"></i><i class="ti-check"></i> 2:36PM</span>
 													</div>
 												</li>
-												<li class="me">
-													<!-- <figure><img src="images/resources/user2.jpg" alt=""></figure> -->
-													<div class="text-box">
-														<p>Yes, i have to see, please follow the below link.. <a href="#" title="">https://www.abc.com</a></p>
-														<span><i class="ti-check"></i><i class="ti-check"></i> 2:38PM</span>
-													</div>
-												</li>
-												<li class="me">
-													<!-- <figure><img src="images/resources/user2.jpg" alt=""></figure> -->
-													<div class="text-box">
-														<p>
-															Dear You May again download the package directly.. 
-															<span><ins>File.txt</ins> <i class="fa fa-file"></i> 30MB download complete</span>
-														</p>
-														<span><i class="ti-check"></i><i class="ti-check"></i> 2:40PM</span>
-													</div>
-												</li>
+                        
 												<li class="you">
-													<!-- <figure><img src="images/resources/user1.jpg" alt=""></figure> -->
+													<figure><img :src="user.avatar" alt=""></figure>
 													<div class="text-box">
 														<div class="wave">
 															<span class="dot"></span>
@@ -399,18 +149,6 @@
 												</ul>
 												<div class="media">
 													<span>Media</span>
-													<!-- <ul>
-														<li><img src="images/resources/audio-user1.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user2.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user3.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user4.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user5.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user6.jpg" alt=""></li>
-														<li><img src="images/resources/admin2.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user1.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user4.jpg" alt=""></li>
-														<li><img src="images/resources/audio-user3.jpg" alt=""></li>
-													</ul> -->
 												</div>
 											</div>
 										</div>
@@ -418,6 +156,60 @@
 								</div>
 							</div>
 						</div>
+
+						<template>
+						  <div >
+						    <a-modal v-model="visibleAddGroup">
+                  <template slot="title">
+                    <span><i class="fas fa-users mr-3" style="font-size: 20px;"></i> New Conversation</span>
+                  </template>
+
+                  <template slot="footer">
+                    <a-button key="submit" type="primary" :loading="loading" @click="createConversation">
+                      Create
+                    </a-button>
+                  </template>
+                  
+                  <a-input v-if="showGroupName" class="mb-3" v-model="createGroup.groupName" placeholder="Group Name">
+                    <a-icon slot="prefix" type="team" style="color:rgba(0,0,0,.25)" />
+                  </a-input>
+
+                  <a-select
+                    mode="multiple"
+                    label-in-value
+                    :value="value"
+                    placeholder="Select Users"
+                    style="width: 100%"
+                    :filter-option="false"
+                    :not-found-content="fetching ? undefined : null"
+                    @search="fetchUser"
+                    @change="handleChange"
+                    class="mb-3"
+                  >
+                    <a-spin v-if="fetching" slot="notFoundContent" size="small" />
+                    <a-select-option v-for="d in data" :key="d._id">
+                      <div class="d-flex align-items-center">
+                        <div class="mr-3">
+                          <a-avatar
+                            slot="avatar"
+                            :src="d.avatar"
+                            style="border: 1.5px solid green;"
+                          />
+                        </div>
+
+                        <div>
+                          {{ d.username }}
+                        </div>
+                      </div>
+                    </a-select-option>
+                  </a-select>
+
+                  <a-button v-if="showLinkConversation" type="primary" @click="openExistConversation">
+                    Go to conversation<a-icon type="right" />
+                  </a-button>
+						    </a-modal>
+						  </div>
+						</template>
 					</div>
 				</div>
 			</div>
@@ -426,15 +218,192 @@
 </template>
 
 <script>
-
+import axios from "axios";
 export default {
   middleware: "authentication",
+  data() {
+    return {
+			user: JSON.parse(localStorage.getItem("currentUser")), 
+			txtSearchMessage: null,
+			txtSearchFriend: "",
+      visibleAddGroup: false,
+      token: localStorage.getItem("token"), 
+      timeout: null,
+      loading: false,
+      data: [],
+      value: [],
+      fetching: false,
+      createGroup: {
+        userIds: [],
+        groupName: null,
+      },
+      listConversations: [],
+      showGroupName: false,
+      showLinkConversation: false,
+      existConversation: {},
+    }
+  },
+  created() {
+    this.getListConversation();
+  },
+  watch: {
+    'value': function (value) {
+      if(value.length >= 2) {
+        this.showGroupName = true
+      }
+      else {
+        this.showGroupName = false
+        this.createGroup.groupName = null
+      }
+    }
+  },
   methods: {
+    async getListConversation() {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/v1/listConversations`, {
+          headers: {
+            Authorization: 'Bearer ' + this.token,
+          }
+        })
+        if(response.data.status == "200") {
+          this.listConversations = response.data.data.listConversations
+        }
+      }
+      catch(e) {
+        this.$notification["error"]({
+          message: 'GET LIST CONVERSATION ERROR',
+          description:
+            e.message
+        });
+      }
+    },
+
     logout() {
       localStorage.removeItem("currentUser")
-    }, 
+		}, 
+		
     sendMessage() {
 
+		}, 
+
+		searchMessage(event) {
+			console.log(this.searchText)
+		}, 
+
+		showModal() {
+      this.visibleAddGroup = true;
+		},
+		
+    async createConversation(e) {
+      this.loading = true
+      try {
+        console.log(this.createGroup.groupName)
+        console.log(this.createGroup.userIds)
+		    if(this.createGroup.groupName == null && this.createGroup.userIds.length >= 2) {
+          throw {message: "Ban phai dat ten nhom!"}
+        }
+        if(this.createGroup.userIds.length <2) {
+          delete this.createGroup.groupName
+        }
+        const response = await axios.post(`http://localhost:5000/api/v1/createConversation`, this.createGroup,
+        {
+          headers: {
+            Authorization: 'Bearer ' + this.token,
+          }
+        })
+        console.log(response)
+        if(response.data.status == "200") {
+          this.listConversations.push(response.data.data.conversation)
+        }
+        this.loading = false
+        this.visibleAddGroup = false;
+      }
+      catch(e) {
+        this.loading = false
+        this.$notification["error"]({
+          message: 'CREATE ERROR',
+          description:
+            e.message
+        });
+      }
+		},
+
+    fetchUser(value) {
+      try {
+        clearTimeout(this.timeout)
+        this.timeout = setTimeout(async() => {
+          this.fetching = true
+          const response = await axios.post(`http://localhost:5000/api/v1/searchFriend`, {
+            searchText: value.trim().toUpperCase(),
+				  },
+          {
+            headers: {
+              Authorization: 'Bearer ' + this.token,
+            }
+          }); 
+          this.fetching = false
+          if(response.data.status == "200") {
+            this.data = response.data.data.listUser
+          }
+          }, 1000); // 1 sec delay
+        
+			}
+			catch(e) {
+        this.fetching = false
+        this.$notification["error"]({
+          message: 'SEARCH ERROR',
+          description:
+            e.message
+        });
+			}
+    },
+
+    async handleChange(value) {
+      Object.assign(this, {
+        value,
+        data: [],
+        fetching: false,
+      });
+
+      this.mappingValue(this.value)
+
+      if(value.length > 0) {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/v1/checkExistConversation`,
+          {
+            params: {
+              userIds: this.createGroup.userIds
+            },
+            headers: {
+              Authorization: 'Bearer ' + this.token,
+            }
+          })
+          if(response.data.status == "200") {
+            if(response.data.data.conversation != null) {
+              this.showLinkConversation = true
+              this.existConversation = response.data.data.conversation
+            }
+          }
+        }
+        catch(e) {
+          this.$notification["error"]({
+            message: 'CHECK CONVERSATION ERROR',
+            description:
+              e.message
+          });
+        }
+      }
+      else {
+        this.showLinkConversation = false
+      }
+    },
+    
+    mappingValue(value) {
+      this.createGroup.userIds = value.map(e => e.key);
+    },
+
+    openConversation(value) {
+      console.log(value)
     }
   }
 }
