@@ -37,33 +37,11 @@
 									<div class="col-lg-8 col-md-8">
 										<div class="mesge-area">
 											<ul class="conversations">
-												<li class="me">
-													<figure><img :src="user.avatar" alt=""></figure>
+												<li v-for="(msg, index) in listMessage" :key="index" :class="msg.memberId[0]._id == user._id ? 'me' : 'you'">
+													<figure><img :src="msg.memberId[0].avatar" alt=""></figure>
 													<div class="text-box">
-														<p>HI, i have checked about your query, there is no any problem like that...</p>
-														<span><i class="ti-check"></i><i class="ti-check"></i> 2:35PM</span>
-													</div>
-												</li>
-
-												<li class="you">
-													<figure><img :src="user.avatar" alt=""></figure>
-													<div class="text-box">
-														<p>
-															thank you for your quick reply, i am sending you a screenshot
-															<em>Size: 106kb <ins>download Complete</ins></em>
-														</p>
-														<span><i class="ti-check"></i><i class="ti-check"></i> 2:36PM</span>
-													</div>
-												</li>
-                        
-												<li class="you">
-													<figure><img :src="user.avatar" alt=""></figure>
-													<div class="text-box">
-														<div class="wave">
-															<span class="dot"></span>
-															<span class="dot"></span>
-															<span class="dot"></span>
-														</div>
+														<p>{{msg.content}}</p>
+														<span><i class="ti-check"></i><i class="ti-check"></i>{{ formatDate(msg.createdAt)}}</span>
 													</div>
 												</li>
 											</ul>
@@ -91,9 +69,6 @@
 													<li><span>Email:</span> <a href="http://wpkixx.com/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1c6f7d716c70795c7b717d7570327f7371">[email&#160;protected]</a></li>
 													<li><span>Phone:</span> Ontario, Canada</li>
 												</ul>
-												<div class="media">
-													<span>Media</span>
-												</div>
 											</div>
 										</div>
 									</div>
@@ -110,6 +85,8 @@
 <script>
 import SideBar from "~/components/v-layout/SideBar"
 import axios from "axios"
+import moment from 'moment'
+import io from 'socket.io-client'
 
 export default {
   middleware: "authentication",
@@ -117,16 +94,20 @@ export default {
     SideBar
   },
   data() {
+    
     return {
       user: JSON.parse(localStorage.getItem("currentUser")), 
       token: localStorage.getItem("token"), 
       activeConversation: {},
-      txtMessage: '',
+      socket: null, 
+	    txtMessage: '',
+	    listMessage: [],
     }
   }, 
 
   created() {
     this.getConversation()
+    this.joinRoom()
   },
 
   methods: {
@@ -141,18 +122,60 @@ export default {
             Authorization: 'Bearer ' + this.token,
           }
         })
+        console.log(response)
         if(response.data.status == "200") {
-          this.activeConversation = response.data.data.conversation
-          console.log(this.activeConversation)
+		  this.activeConversation = response.data.data.conversation
+		  this.listMessage = response.data.data.message
         }
       }
       catch(e) {
-
+        this.$notification["error"]({
+          message: 'GET CONVERSATION ERROR',
+          description:
+            e.message
+        });
       }
     },
 
-    sendMessage() {
-      console.log(this.txtMessage)
+    async sendMessage() {
+      if(this.txtMessage.trim() != "") {
+        try {
+          const response = await axios.post(`http://localhost:5000/api/v1/sendMessage`, { 
+            content: this.txtMessage, 
+            conversationID: this.$route.params.id
+          },
+		      {
+          	headers: {
+          	  Authorization: 'Bearer ' + this.token,
+            }
+          })
+          this.txtMessage = ''
+          if(response.data.status == "200") {
+            this.listMessage.push(response.data.data.returnMessage)
+          }
+        }
+        catch(e) {
+          this.$notification["error"]({
+            message: 'SEND MESSAGE ERROR',
+            description:
+              e.message
+          });
+        }
+      }
+    }, 
+
+    formatDate(date) {
+      if(new Date().toJSON().slice(0,10) == date.slice(0,10)) {
+      return moment(date).format('hh:mm');
+      }
+      else {
+      return moment(date).format('MM/DD/YYYY');
+      }
+    },
+
+    joinRoom() {
+      this.socket = io('http://localhost:5000/Conversation')
+      socket.emit('join', this.user)
     }
   }
 }

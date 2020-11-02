@@ -1,0 +1,31 @@
+.message-people-srch {
+    display: inline-block;
+    margin-bottom: 25px;
+    margin-top: 15px;
+    width: 100%;
+	padding: 0 15px;
+}
+.message-people-srch > form {
+    display: inline-block;
+    margin-bottom: 15px;
+    position: relative;
+    width: 100%;
+}
+.message-people-srch > form input {
+    background: #edf2f6;
+    border: medium none;
+    border-radius: 5px;
+    color: inherit;
+    display: inline-block;
+    font-size: 13px;
+    padding: 8px 10px;
+    width: 100%;
+}
+.message-people-srch > form button {
+    background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
+    color: #333;
+    padding: 0;
+    position: absolute;
+    right: 10px;
+    top: 8px;
+}

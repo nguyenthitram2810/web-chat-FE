@@ -4,8 +4,22 @@
 			<div class="container-fluid px-0">
 				<div class="row">
 					<div class="col-lg-12 px-0">
-						<SideBar/>
-            <a-empty style="height: 638px;" class="d-flex align-items-center justify-content-around" :description="false" />
+						<SideBar 
+              :listConversations="listConversations" 
+              :user="user"
+              @open="getConversation"
+              @fetchUser="fetchUser"
+              @addUser="addUser"
+              @createConversation="createConversation"
+            />
+            <a-empty v-if="listConversations.length == 0" style="height: 638px;" class="d-flex align-items-center justify-content-around" :description="false" />
+            <Message 
+              v-else 
+              :conversation="activeConversation" 
+              :message="listMessage" 
+              :user="user"
+              @send="sendMessage"
+            />
 					</div>
 				</div>
 			</div>
@@ -15,12 +29,215 @@
 
 <script>
 import SideBar from "~/components/v-layout/SideBar"
+import Message from "~/components/Message"
+import axios from "axios"
 
 export default {
   middleware: "authentication",
   components: {
-    SideBar
+    SideBar, 
+    Message
   },
+
+  data() {
+    return {
+      user: JSON.parse(localStorage.getItem("currentUser")), 
+      token: localStorage.getItem("token"), 
+      listConversations: [],
+      params: {
+        id: String
+      }, 
+      activeConversation: {}, 
+      listMessage: [],
+    }
+  },
+
+  watch: {
+    'listConversations': function(value) {
+      const query = this.$route.query
+      if(!query.id && this.listConversations.length > 0) {
+        this.params.id = this.listConversations[0]._id
+        this.$router.push({name: this.$route.name, query: {...this.params} })
+        this.openConversation(this.params.id)
+      }
+    }
+  },
+
+  created() {
+    this.getListConversation();
+    this.getQueryParams()
+  },
+
+  methods: {
+    async getListConversation() {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/v1/listConversations`, {
+          headers: {
+            Authorization: 'Bearer ' + this.token,
+          }
+        })
+        console.log(response)
+        if(response.data.status == "200") {
+          this.listConversations = response.data.data.listConversations
+        }
+      }
+      catch(e) {
+        this.$notification["error"]({
+          message: 'GET LIST CONVERSATION ERROR',
+          description:
+            e.message
+        });
+      }
+    },
+
+    getQueryParams() {
+      const query = this.$route.query
+      if(query.id) {
+        this.openConversation(query.id)
+      }
+    },
+
+    async fetchUser(value) {
+      try {
+        this.$store.commit('conversation/SET_FETCHING_USER', true)
+        const response = await axios.post(`http://localhost:5000/api/v1/searchFriend`, {
+          searchText: value
+				},
+        {
+          headers: {
+            Authorization: 'Bearer ' + this.token,
+          }
+        }); 
+        this.$store.commit('conversation/SET_FETCHING_USER', false)
+        if(response.data.status == "200") {
+          this.$store.commit('conversation/SET_RETURN_DATA', response.data.data.listUser)
+        } 
+			}
+			catch(e) {
+        this.$store.commit('conversation/SET_FETCHING_USER', false)
+        this.$notification["error"]({
+          message: 'SEARCH ERROR',
+          description:
+            e.message
+        });
+			}
+    },
+
+    async addUser(value) {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/v1/checkExistConversation`,
+        {
+          params: {
+            userIds: value
+          },
+          headers: {
+            Authorization: 'Bearer ' + this.token,
+          }
+        })
+        if(response.data.status == "200") {
+          if(response.data.data.conversation != null) {
+            this.$store.commit('conversation/SET_EXIST_CONVERSATION', response.data.data.conversation)
+          }
+        }
+      }
+      catch(e) {
+        this.$notification["error"]({
+          message: 'CHECK CONVERSATION ERROR',
+          description:
+            e.message
+        });
+      }
+    },
+
+    async createConversation(createGroup) {
+      try {
+		    if(!createGroup.groupName && createGroup.userIds.length >= 2) {
+          throw {message: "Ban phai dat ten nhom!"}
+        }
+        if(createGroup.userIds.length < 2) {
+          delete createGroup.groupName
+        }
+        const response = await axios.post(`http://localhost:5000/api/v1/createConversation`, createGroup,
+        {
+          headers: {
+            Authorization: 'Bearer ' + this.token,
+          }
+        })
+        console.log(response)
+        if(response.data.status == "200") {
+          this.listConversations.push(response.data.data.conversation)
+        }
+        this.$store.commit('conversation/SET_LOADING_MODAL', false)
+        this.$store.commit('conversation/SET_VISIBLE_MODAL', false)
+      }
+      catch(e) {
+        this.$store.commit('conversation/SET_LOADING_MODAL', false)
+        this.$notification["error"]({
+          message: 'CREATE ERROR',
+          description:
+            e.message
+        });
+      }
+    },
+
+    getConversation(value) {
+      const query = this.$route.query
+      this.params.id = value
+      this.$router.push({name: this.$route.name, query: {...this.params} })
+      this.openConversation(this.params.id)
+    },
+
+    async openConversation(value) {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/v1/oneConversation`, 
+        {
+          params: {
+            roomId: value
+          },
+          headers: {
+            Authorization: 'Bearer ' + this.token,
+          }
+        })
+        console.log(response)
+        this.$store.commit('conversation/SET_ACTIVE_CONVERSATION', value)
+        if(response.data.status == "200") {
+		      this.activeConversation = response.data.data.conversation
+		      this.listMessage = response.data.data.message
+        }
+      }
+      catch(e) {
+        this.$notification["error"]({
+          message: 'GET CONVERSATION ERROR',
+          description:
+            e.message
+        });
+      }
+    }, 
+
+    async sendMessage(value) {
+      try {
+        const response = await axios.post(`http://localhost:5000/api/v1/sendMessage`, { 
+          content: value, 
+          conversationID: this.params.id
+        },
+		    {
+        	headers: {
+        	  Authorization: 'Bearer ' + this.token,
+          }
+        })
+        if(response.data.status == "200") {
+          this.listMessage.push(response.data.data.returnMessage)
+        }
+      }
+      catch(e) {
+        this.$notification["error"]({
+          message: 'SEND MESSAGE ERROR',
+          description:
+            e.message
+        });
+      }
+    }
+  }
 }
 </script>
 
