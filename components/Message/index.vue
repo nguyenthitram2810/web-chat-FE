@@ -42,7 +42,7 @@
 					</div>
 					<div class="message-writing-box">
 						<div class="text-area">
-							<a-input v-model="txtMessage" type="text" placeholder="write your message here.."/>
+							<a-input @change="typingMessage" v-model="txtMessage" type="text" placeholder="write your message here.."/>
 							<a-button @click="sendMessage"><i class="far fa-paper-plane"></i></a-button>
 						</div>
 					</div>
@@ -120,6 +120,10 @@ export default {
         this.$emit('send', this.txtMessage);
         this.txtMessage = ''
       }
+    }, 
+
+    typingMessage() {
+      
     }
   }
 }

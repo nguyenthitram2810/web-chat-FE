@@ -31,6 +31,7 @@
 import SideBar from "~/components/v-layout/SideBar"
 import Message from "~/components/Message"
 import axios from "axios"
+import * as io from 'socket.io-client'
 
 export default {
   middleware: "authentication",
@@ -49,12 +50,15 @@ export default {
       }, 
       activeConversation: {}, 
       listMessage: [],
+      socket: io('http://localhost:5000/Conversation'), 
+      socketNotify: io('http://localhost:5000/notifyIO'), 
     }
   },
 
   watch: {
     'listConversations': function(value) {
       const query = this.$route.query
+      console.log(this.listConversations);
       if(!query.id && this.listConversations.length > 0) {
         this.params.id = this.listConversations[0]._id
         this.$router.push({name: this.$route.name, query: {...this.params} })
@@ -66,9 +70,23 @@ export default {
   created() {
     this.getListConversation();
     this.getQueryParams()
+    this.joinUserNotify()
+
+    this.socket.on('new-message-room', (data) => {
+      console.log(data)
+      this.listMessage.push(data.returnMessage)
+    });
   },
 
   methods: {
+    joinUserNotify() {
+      this.socketNotify.emit('join', this.user._id)
+    }, 
+
+    joinRoom(id) {
+      this.socket.emit('join', id)
+    },
+
     async getListConversation() {
       try {
         const response = await axios.get(`http://localhost:5000/api/v1/listConversations`, {
@@ -79,6 +97,9 @@ export default {
         console.log(response)
         if(response.data.status == "200") {
           this.listConversations = response.data.data.listConversations
+          this.listConversations.forEach(e => {
+            this.joinRoom(e._id)
+          });
         }
       }
       catch(e) {
@@ -93,6 +114,7 @@ export default {
     getQueryParams() {
       const query = this.$route.query
       if(query.id) {
+        this.params.id = query.id
         this.openConversation(query.id)
       }
     },
@@ -165,7 +187,8 @@ export default {
         })
         console.log(response)
         if(response.data.status == "200") {
-          this.listConversations.push(response.data.data.conversation)
+          this.listConversations.unshift(response.data.data.conversation)
+          this.getConversation(this.listConversations[0]._id)
         }
         this.$store.commit('conversation/SET_LOADING_MODAL', false)
         this.$store.commit('conversation/SET_VISIBLE_MODAL', false)
@@ -202,7 +225,7 @@ export default {
         this.$store.commit('conversation/SET_ACTIVE_CONVERSATION', value)
         if(response.data.status == "200") {
 		      this.activeConversation = response.data.data.conversation
-		      this.listMessage = response.data.data.message
+          this.listMessage = response.data.data.message
         }
       }
       catch(e) {
@@ -218,16 +241,15 @@ export default {
       try {
         const response = await axios.post(`http://localhost:5000/api/v1/sendMessage`, { 
           content: value, 
-          conversationID: this.params.id
+          conversationID: this.params.id, 
+          userIds: this.activeConversation.userIds
         },
 		    {
         	headers: {
         	  Authorization: 'Bearer ' + this.token,
           }
         })
-        if(response.data.status == "200") {
-          this.listMessage.push(response.data.data.returnMessage)
-        }
+        console.log(response);
       }
       catch(e) {
         this.$notification["error"]({

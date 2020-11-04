@@ -45,6 +45,7 @@
       @create="createConversation"
       @fetch="fetchUser"
       @add="addUser"
+      @cancel="cancelModal"
     />
 	</div>
 </template>
@@ -98,7 +99,7 @@ export default {
     },
     
     createConversation(value) {
-      this.$emit('conversation', value)
+      this.$emit('createConversation', value)
     },
     
     fetchUser(value) {
@@ -111,6 +112,10 @@ export default {
 
     openConversation(value) {
       this.$emit('open', value._id)
+    }, 
+
+    cancelModal(value) {
+      this.$store.commit('conversation/SET_VISIBLE_MODAL', false)
     }
   }
 }

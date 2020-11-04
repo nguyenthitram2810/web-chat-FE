@@ -1,6 +1,6 @@
 <template>
   <div >
-	  <a-modal v-model="visible" @cancel="handleCancel">
+	  <a-modal v-model="visibleModal" @cancel="handleCancel">
       <template slot="title">
         <span><i class="fas fa-users mr-3" style="font-size: 20px;"></i> New Conversation</span>
       </template>
@@ -70,12 +70,13 @@ export default {
       data: [],
       showLinkConversation: false,
       existConversation: {},
+      visibleModal: this.visible,
     }
   },
 
   watch: {
     'visible': function(value) {
-      this.visible = value
+      this.visibleModal = value
     }, 
 
     '$store.state.conversation.fetching': function(value) {
@@ -151,7 +152,7 @@ export default {
     },
 
     handleCancel() {
-      this.$store.commit('conversation/SET_VISIBLE_MODAL', false)
+      this.$emit('cancel', false);
     }
   }
 }
