@@ -22,7 +22,7 @@
 						</div>
 						<ul class="live-calls">
 							<li class="audio-call"><span class="fa fa-phone"></span></li>
-							<li class="video-call"><span class="fa fa-video"></span></li>
+							<li @click="callVideo" class="video-call"><span class="fa fa-video"></span></li>
 							<li class="uzr-info"><span class="fa fa-info-circle"></span></li>
 						</ul>
 					</div>
@@ -124,6 +124,10 @@ export default {
 
     typingMessage() {
       
+    }, 
+
+    callVideo() {
+      this.$emit('call');
     }
   }
 }

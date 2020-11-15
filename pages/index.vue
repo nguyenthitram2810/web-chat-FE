@@ -19,6 +19,7 @@
               :message="listMessage" 
               :user="user"
               @send="sendMessage"
+              @call="callVideo"
             />
 					</div>
 				</div>
@@ -267,6 +268,10 @@ export default {
             e.message
         });
       }
+    }, 
+
+    callVideo() {
+      console.log("hey");
     }
   }
 }
