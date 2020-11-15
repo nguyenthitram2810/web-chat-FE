@@ -100,7 +100,6 @@ export default {
               email: this.loginForm.email.trim(), 
               password: this.loginForm.password.trim(),
             });
-            console.log(response)
             if(response.data.status == "200") {
               localStorage.setItem("currentUser", JSON.stringify(response.data.data.userInfo)); 
               localStorage.setItem("token", response.data.data.token); 

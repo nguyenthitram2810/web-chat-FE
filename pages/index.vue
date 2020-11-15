@@ -57,8 +57,7 @@ export default {
 
   watch: {
     'listConversations': function(value) {
-      const query = this.$route.query
-      console.log(this.listConversations);
+      const query = this.$route.query;
       if(!query.id && this.listConversations.length > 0) {
         this.params.id = this.listConversations[0]._id
         this.$router.push({name: this.$route.name, query: {...this.params} })
@@ -73,8 +72,13 @@ export default {
     this.joinUserNotify()
 
     this.socket.on('new-message-room', (data) => {
-      console.log(data)
       this.listMessage.push(data.returnMessage)
+      this.pushNewConversation(data.conversation)
+    });
+
+    this.socket.on('notifyMessage', (data) => {
+      console.log(data);
+      this.pushNewConversation(data.conversation)
     });
   },
 
@@ -87,6 +91,15 @@ export default {
       this.socket.emit('join', id)
     },
 
+    leftRoom(id) {
+      this.socket.emit('left', id)
+    },
+
+    pushNewConversation(conversation) {
+      this.listConversations = this.listConversations.filter(o => o._id !== conversation._id);
+      this.listConversations.unshift(conversation)
+    },
+
     async getListConversation() {
       try {
         const response = await axios.get(`http://localhost:5000/api/v1/listConversations`, {
@@ -94,12 +107,8 @@ export default {
             Authorization: 'Bearer ' + this.token,
           }
         })
-        console.log(response)
         if(response.data.status == "200") {
           this.listConversations = response.data.data.listConversations
-          this.listConversations.forEach(e => {
-            this.joinRoom(e._id)
-          });
         }
       }
       catch(e) {
@@ -115,6 +124,7 @@ export default {
       const query = this.$route.query
       if(query.id) {
         this.params.id = query.id
+        this.joinRoom(query.id)
         this.openConversation(query.id)
       }
     },
@@ -185,7 +195,6 @@ export default {
             Authorization: 'Bearer ' + this.token,
           }
         })
-        console.log(response)
         if(response.data.status == "200") {
           this.listConversations.unshift(response.data.data.conversation)
           this.getConversation(this.listConversations[0]._id)
@@ -207,6 +216,8 @@ export default {
       const query = this.$route.query
       this.params.id = value
       this.$router.push({name: this.$route.name, query: {...this.params} })
+      this.leftRoom(this.activeConversation._id)
+      this.joinRoom(this.params.id)
       this.openConversation(this.params.id)
     },
 
@@ -221,7 +232,6 @@ export default {
             Authorization: 'Bearer ' + this.token,
           }
         })
-        console.log(response)
         this.$store.commit('conversation/SET_ACTIVE_CONVERSATION', value)
         if(response.data.status == "200") {
 		      this.activeConversation = response.data.data.conversation
@@ -249,7 +259,6 @@ export default {
         	  Authorization: 'Bearer ' + this.token,
           }
         })
-        console.log(response);
       }
       catch(e) {
         this.$notification["error"]({

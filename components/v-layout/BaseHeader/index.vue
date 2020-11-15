@@ -40,7 +40,6 @@ export default {
   },
   methods: {
     loggOut () {
-      console.log("hey")
       localStorage.removeItem("currentUser"); 
       localStorage.removeItem("token");
       this.$store.dispatch("auth/setCurrent", { currentUser: null });

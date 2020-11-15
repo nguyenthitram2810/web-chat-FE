@@ -17,7 +17,7 @@
 		<div class="mesg-peple">
 			<ul class="nav nav-tabs nav-tabs--vertical msg-pepl-list">
 				<li class="nav-item unread" v-for="d in listConversations" :key="d._id">
-					<a :class="d._id == activeConversation ? 'active' : ''" @click="openConversation(d)" data-toggle="tab">
+					<a class="d-flex" :class="d._id == activeConversation ? 'active' : ''" @click="openConversation(d)" data-toggle="tab">
 						<figure>
               <img v-if="d.avatar != undefined" :src="d.avatar" alt="">
               <template v-else v-for="el in d.userIds">
@@ -25,15 +25,14 @@
               </template>
 							<!-- <span class="status"></span> -->
 						</figure>
-						<div class="user-name">
+						<div class="user-name d-flex flex-column cn-w-100">
 							<h6 class="" v-if="d.groupName != undefined">{{ d.groupName }}</h6>
               <h6 v-else>
                 <template v-for="el in d.userIds">
                   <span v-if="el._id != user._id"  :key="el._id"> {{ el.username }}</span>
                 </template>
               </h6>
-							<span v-if="d.lastUser != undefined">{{ d.lastUser }}</span>
-              <span v-if="d.lastMessage != undefined"> {{ d.lastMessage }}</span>
+              <span class="truncate-2-line" v-if="d.lastUser != undefined">{{ d.lastUser._id == user._id ? 'you: ' : `${d.lastUser.username}: ` }}{{ d.lastMessage }}</span>
 						</div>
 					</a>
 				</li>
