@@ -24,13 +24,40 @@
 					</div>
 				</div>
 			</div>
-		</div>	
+		</div>
+
+    <div v-if="incomingCall" class="call-wraper active">
+	  	<div class="m-live-call">
+	  		<figure><img src="images/resources/author.jpg" alt=""></figure>
+	  		<div class="call-box">
+	  			<h6>Jack Carter</h6>
+	  			<span>incoming call</span>
+	  			<i class="ti-microphone"></i>
+	  			<div class="wave">
+	  				<span class="dot"></span>
+	  				<span class="dot"></span>
+	  				<span class="dot"></span>
+	  			</div>
+	  			<ins class="later-rmnd">Remind me later</ins>
+	  			<div class="yesorno">
+	  				<a @click="cancelCall" class="bg-red decline-call" title=""><i class="fa fa-close"></i></a>
+	  			</div>
+	  		</div>
+	  	</div>
+	  </div><!-- audio video call popup -->		
+
+    <Call 
+      v-if="calling"
+      @cancel="cancelCalling"
+    />
+    <video id="localVideo" class="video__myself" autoplay></video>
 	</section><!-- content -->
 </template>
 
 <script>
 import SideBar from "~/components/v-layout/SideBar"
 import Message from "~/components/Message"
+import Call from "~/components/Call"
 import axios from "axios"
 import * as io from 'socket.io-client'
 
@@ -38,7 +65,8 @@ export default {
   middleware: "authentication",
   components: {
     SideBar, 
-    Message
+    Message, 
+    Call
   },
 
   data() {
@@ -53,6 +81,23 @@ export default {
       listMessage: [],
       socket: io('http://localhost:5000/Conversation'), 
       socketNotify: io('http://localhost:5000/notifyIO'), 
+      incomingCall: false,
+      calling: false,
+      // videos
+      myVideo: {},
+      remoteVideo: {},
+      // Media config
+      constraints: {
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true, 
+          autoGainControl: false
+        },
+        video: { 
+          width: 450, 
+          height: 348 
+        }
+      },
     }
   },
 
@@ -270,8 +315,38 @@ export default {
       }
     }, 
 
-    callVideo() {
-      console.log("hey");
+    async getUserMedia() {
+      if ("mediaDevices" in navigator) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia(this.constraints);
+          const video = document.getElementById("localVideo");
+          video.srcObject = stream;
+          video.play()
+        } catch (error) {
+          console.log(`getUserMedia error: ${error}`);
+        }
+      }
+    },
+
+    async callVideo() {
+      this.calling = true;
+      await this.getUserMedia()
+    }, 
+
+    acceptCall() {
+
+    }, 
+
+    cancelCall() {
+      this.incomingCall = false
+    }, 
+
+    acceptCalling() {
+
+    },
+
+    cancelCalling() {
+      this.calling = false
     }
   }
 }

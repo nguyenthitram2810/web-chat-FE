@@ -1,7 +1,7 @@
 <template>
-  <div class="call-wraper">
-		<div class="m-live-call">
-			<figure><img src="images/resources/author.jpg" alt=""></figure>
+  <div class="call-wraper active">
+		<div class="m-live-calling">
+			<!-- <figure><img src="images/resources/author.jpg" alt=""></figure> -->
 			<div class="call-box">
 				<h6>Jack Carter</h6>
 				<span>incoming call</span>
@@ -11,10 +11,8 @@
 					<span class="dot"></span>
 					<span class="dot"></span>
 				</div>
-				<ins class="later-rmnd">Remind me later</ins>
 				<div class="yesorno">
-					<a class="bg-blue accept-call" href="#" title=""><i class="fa fa-phone"></i></a>
-					<a class="bg-red decline-call" href="#" title=""><i class="fa fa-close"></i></a>
+					<a @click="cancel" class="bg-red decline-call" title=""><i class="fa fa-close"></i></a>
 				</div>
 			</div>
 		</div>
@@ -23,10 +21,15 @@
 
 <script>
 export default {
-    
+  name: 'Call',
+  methods: {  
+    cancel() {
+      this.$emit('cancel')
+    }
+  }
 }
 </script>
 
 <style lang="scss" scoped>
-
+@import url("./style.scss");
 </style>
