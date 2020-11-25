@@ -17,7 +17,7 @@ export const actions = {
   async fetchListData({state, commit, rootState}, { value }) {
     try {
       commit('SET_FETCHING_USER', true)
-      const response = await axios.post(`http://78f90e8249d4.ngrok.io/api/v1/searchFriend`, {
+      const response = await this.$axios.post(`/searchFriend`, {
         searchText: value
 			},
       {

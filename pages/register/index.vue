@@ -134,7 +134,7 @@ export default {
           this.isDisabled = true;
           delete this.registerForm.confirmPass;
           try {
-            const response = await axios.post(`http://78f90e8249d4.ngrok.io/api/v1/signup`, {
+            const response = await this.$axios.post(`/signup`, {
               username: this.registerForm.username.trim(),
               email: this.registerForm.email.trim(), 
               password: this.registerForm.password.trim(),

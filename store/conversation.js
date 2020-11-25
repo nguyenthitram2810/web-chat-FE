@@ -60,7 +60,7 @@ export const mutations = {
 export const actions = {
   async fetchListData({state, commit, rootState}) {
     try {
-      const response = await axios.get(`http://78f90e8249d4.ngrok.io/api/v1/listConversations`, {
+      const response = await this.$axios.get(`/listConversations`, {
         headers: {
           Authorization: 'Bearer ' + rootState.auth.token,
         }
@@ -76,7 +76,7 @@ export const actions = {
   async open({state, commit, rootState}) {
     try {
       let roomId = state.query.id
-      const response = await axios.get(`http://78f90e8249d4.ngrok.io/api/v1/oneConversation`, 
+      const response = await this.$axios.get(`/oneConversation`, 
       {
         params: {
           roomId,
@@ -97,7 +97,7 @@ export const actions = {
 
   async create({state, commit, rootState}, { data }) {
     try {
-      const response = await axios.post(`http://78f90e8249d4.ngrok.io/api/v1/createConversation`, data,
+      const response = await this.$axios.post(`/createConversation`, data,
       {
         headers: {
           Authorization: 'Bearer ' + rootState.auth.token,
@@ -114,7 +114,7 @@ export const actions = {
 
   async checkExist({state, commit, rootState}, { userIds }) {
     try {
-      const response = await axios.get(`http://78f90e8249d4.ngrok.io/api/v1/checkExistConversation`,
+      const response = await this.$axios.get(`/checkExistConversation`,
       {
         params: {
           userIds
@@ -138,7 +138,7 @@ export const actions = {
 
   async sendMessage({state, commit, rootState}, { content }) {
     try {
-      const response = await axios.post(`http://78f90e8249d4.ngrok.io/api/v1/sendMessage`, { 
+      const response = await this.$axios.post(`/sendMessage`, { 
         content, 
         conversationID: state.query.id, 
         userIds: state.activeConversation.userIds

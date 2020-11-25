@@ -82,7 +82,7 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
-    baseURL: process.env.API_URL || 'http://localhost:3002/api'
+    baseURL: 'https://multimedia--chat-api.herokuapp.com/api/v1/'
   },
 
   env: {

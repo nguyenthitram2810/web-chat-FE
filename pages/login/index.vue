@@ -96,7 +96,7 @@ export default {
         if (valid) {
           this.isDisabled = true
           try {
-            const response = await axios.post(`http://78f90e8249d4.ngrok.io/api/v1/signin`, {
+            const response = await this.$axios.post(`/signin`, {
               email: this.loginForm.email.trim(), 
               password: this.loginForm.password.trim(),
             });
