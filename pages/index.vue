@@ -93,8 +93,8 @@ export default {
 
   data() {
     return {
-      socket: io('ws://multimedia--chat-api.herokuapp.com/Conversation'), 
-      socketNotify: io('ws://multimedia--chat-api.herokuapp.com/notifyIO'), 
+      socket: io('http://multimedia--chat-api.herokuapp.com/Conversation', {transports: ['websocket', 'polling', 'flashsocket']}), 
+      socketNotify: io('http://multimedia--chat-api.herokuapp.com/notifyIO', {transports: ['websocket', 'polling', 'flashsocket']}), 
       incomingCall: false,
       calling: false,
       constraints: {
