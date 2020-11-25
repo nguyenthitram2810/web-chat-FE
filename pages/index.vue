@@ -93,16 +93,8 @@ export default {
 
   data() {
     return {
-      socket: io('ws://multimedia--chat-api.herokuapp.com/Conversation', {
-        extraHeaders: {
-          'Access-Control-Allow-Credentials': 'omit'
-        }
-      }), 
-      socketNotify: io('ws://multimedia--chat-api.herokuapp.com/notifyIO', {
-        extraHeaders: {
-          'Access-Control-Allow-Credentials': 'omit'
-        }
-      }), 
+      socket: io('ws://multimedia--chat-api.herokuapp.com/Conversation'), 
+      socketNotify: io('ws://multimedia--chat-api.herokuapp.com/notifyIO'), 
       incomingCall: false,
       calling: false,
       constraints: {
