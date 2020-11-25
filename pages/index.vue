@@ -93,8 +93,8 @@ export default {
 
   data() {
     return {
-      socket: io('ws://78f90e8249d4.ngrok.io/Conversation'), 
-      socketNotify: io('ws://78f90e8249d4.ngrok.io/notifyIO'), 
+      socket: io('ws://multimedia--chat-api.herokuapp.com//Conversation'), 
+      socketNotify: io('ws://multimedia--chat-api.herokuapp.com/notifyIO'), 
       incomingCall: false,
       calling: false,
       constraints: {
