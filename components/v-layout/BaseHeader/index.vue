@@ -42,7 +42,8 @@ export default {
     loggOut () {
       localStorage.removeItem("currentUser"); 
       localStorage.removeItem("token");
-      this.$store.dispatch("auth/setCurrent", { currentUser: null });
+      this.$store.commit("auth/SET_CURRENT_USER", null);
+      this.$store.commit("auth/SET_TOKEN", null);
       this.$router.push("/login");
     }
   }

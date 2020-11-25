@@ -72,35 +72,37 @@
 
 <script>
 import moment from 'moment'
+import { mapState } from 'vuex'
 
 export default {
   name: 'Message', 
-  props: {
-    user: Object,
-    conversation: Object,
-    message: Array
-  },
   data() {
     return {
       txtMessage: '',
     }
   },
 
-  watch: {
-    'conversation': function(value) {
-      this.conversation = value
-    }, 
-
-    'message': function(value) {
-      this.message = value
-    }
-  }, 
+  computed: {
+    ...mapState({
+      user: (state) => state.auth.currentUser, 
+      conversation: (state) => state.conversation.activeConversation, 
+      message:  (state) => state.conversation.listMessage,
+    })
+  },
 
   updated() {
     this.scrollToEnd()
   },
 
   methods: {
+    handleError(err) {
+      this.$notification["error"]({
+        message: 'ERROR',
+        description:
+          err.message
+      });
+    },
+    
     scrollToEnd() {    	
       var content = this.$refs.conversations;
       content.scrollTop = content.scrollHeight;
@@ -115,10 +117,15 @@ export default {
       }
     },
 
-    sendMessage() {
+    async sendMessage() {
       if(this.txtMessage.trim() != "") {
-        this.$emit('send', this.txtMessage);
-        this.txtMessage = ''
+        try {
+          await this.$store.dispatch('conversation/sendMessage', { content: this.txtMessage })
+          this.txtMessage = ''
+        }
+        catch(error) {
+          this.handleError(error)
+        }
       }
     }, 
 

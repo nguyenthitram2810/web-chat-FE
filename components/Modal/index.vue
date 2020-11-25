@@ -1,6 +1,7 @@
+  
 <template>
   <div >
-	  <a-modal v-model="visibleModal" @cancel="handleCancel">
+	  <a-modal v-model="visible" @cancel="handleCancel">
       <template slot="title">
         <span><i class="fas fa-users mr-3" style="font-size: 20px;"></i> New Conversation</span>
       </template>
@@ -50,15 +51,12 @@
 </template>
 
 <script>
-
+import { mapState } from "vuex"
+import { state } from '~/store/auth'
 export default {
   name: 'Modal',
-  props: {
-    visible : Boolean,
-  },
   data() {
     return {
-      loading: false,
       createGroup: {
         userIds: [],
         groupName: null,
@@ -69,24 +67,15 @@ export default {
       timeout: null,
       data: [],
       showLinkConversation: false,
-      existConversation: {},
-      visibleModal: this.visible,
     }
   },
-
   watch: {
-    'visible': function(value) {
-      this.visibleModal = value
-    }, 
-
-    '$store.state.conversation.fetching': function(value) {
+    '$store.state.user.fetching': function(value) {
       this.fetching = value
     }, 
-
-    '$store.state.conversation.data': function(value) {
+    '$store.state.user.list': function(value) {
       this.data = value
     }, 
-
     'value': function (value) {
       if(value.length >= 2) {
         this.showGroupName = true
@@ -96,26 +85,28 @@ export default {
         this.createGroup.groupName = null
       }
     }, 
-
     '$store.state.conversation.existConversation': function(value) {
       if(value != null) {
         this.showLinkConversation = true
-        this.existConversation = value
       }
       else {
         this.showLinkConversation = false
-        this.existConversation = {}
       }
     }, 
+  },
 
-    '$store.state.conversation.loading': function(value) {
-      this.loading = value
-    }
+  computed: {
+    ...mapState({
+      user: (state) => state.auth.currentUser, 
+      activeConversation: (state) => state.conversation.activeConversation, 
+      visible: (state) => state.conversation.visibleModal, 
+      existConversation: (state) => state.conversation.existConversation, 
+      loading: (state) => state.conversation.loading,
+    })
   },
 
   methods: {
     createConversation() {
-      this.loading = true;
       this.$emit('create', this.createGroup)
     },
 
@@ -125,16 +116,14 @@ export default {
       this.$emit('fetch', value.trim().toUpperCase())
       }, 1000); // 1 sec delay
     }, 
-    
+
     handleChange(value) {
       Object.assign(this, {
         value,
         data: [],
         fetching: false,
       });
-
       this.mappingValue(this.value)
-
       if(value.length > 0) {
         this.$emit('add', this.createGroup.userIds)
       }
@@ -144,7 +133,6 @@ export default {
     }, 
 
     openExistConversation() {
-
     }, 
 
     mappingValue(value) {
@@ -159,5 +147,4 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 </style>

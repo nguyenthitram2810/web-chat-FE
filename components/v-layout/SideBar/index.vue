@@ -17,7 +17,7 @@
 		<div class="mesg-peple">
 			<ul class="nav nav-tabs nav-tabs--vertical msg-pepl-list">
 				<li class="nav-item unread" v-for="d in listConversations" :key="d._id">
-					<a class="d-flex" :class="d._id == activeConversation ? 'active' : ''" @click="openConversation(d)" data-toggle="tab">
+					<a class="d-flex" :class="d._id == activeConversation._id ? 'active' : ''" @click="openConversation(d)" data-toggle="tab">
 						<figure>
               <img v-if="d.avatar != undefined" :src="d.avatar" alt="">
               <template v-else v-for="el in d.userIds">
@@ -40,7 +40,6 @@
 		</div>
 
     <Modal  
-      :visible="visibleAddGroup" 
       @create="createConversation"
       @fetch="fetchUser"
       @add="addUser"
@@ -52,7 +51,7 @@
 <script>
 import Modal from '~/components/Modal'
 import Search from '~/components/Search'
-import axios from "axios"
+import { mapState } from 'vuex'
 
 export default {
   name: 'SideBar',
@@ -60,39 +59,40 @@ export default {
     Modal, 
     Search
   },
-  props: {
-    listConversations: Array, 
-    user: Object,
-  },
+
   data() {
     return {
 			txtSearchMessage: null,
 			txtSearchFriend: "",
-      visibleAddGroup: false,
-      showLinkConversation: false,
-      activeConversation: null,
     }
   },
 
-  watch: {
-    'listConversations': function(value) {
-      this.listConversations = value
-    }, 
-
-    '$store.state.conversation.visibleModal': function(value) {
-      this.visibleAddGroup = value
-    }, 
-
-    '$store.state.conversation.active': function(value) {
-      this.activeConversation = value
-    },
+  computed: {
+    ...mapState({
+      user: (state) => state.auth.currentUser, 
+      listConversations: (state) => state.conversation.list, 
+      activeConversation: (state) => state.conversation.activeConversation, 
+    })
   },
 
   methods: {
+    handleError(err) {
+      this.$notification["error"]({
+        message: 'ERROR',
+        description:
+          err.message
+      });
+    },
+
     searchMessage(event) {
 			console.log(this.searchText)
     }, 
-    
+    fetchUser(value) {
+      this.$emit('fetchUser', value)
+    },
+    addUser(value) {
+      this.$emit('addUser', value)
+    },
     showModal() {
       this.$store.commit('conversation/SET_VISIBLE_MODAL', true)
     },
@@ -100,19 +100,10 @@ export default {
     createConversation(value) {
       this.$emit('createConversation', value)
     },
-    
-    fetchUser(value) {
-      this.$emit('fetchUser', value)
-    },
-
-    addUser(value) {
-      this.$emit('addUser', value)
-    },
 
     openConversation(value) {
       this.$emit('open', value._id)
     }, 
-
     cancelModal(value) {
       this.$store.commit('conversation/SET_VISIBLE_MODAL', false)
     }

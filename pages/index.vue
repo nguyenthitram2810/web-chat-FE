@@ -5,20 +5,14 @@
 				<div class="row">
 					<div class="col-lg-12 px-0">
 						<SideBar 
-              :listConversations="listConversations" 
-              :user="user"
               @open="getConversation"
+              @createConversation="createConversation"
               @fetchUser="fetchUser"
               @addUser="addUser"
-              @createConversation="createConversation"
             />
             <a-empty v-if="listConversations.length == 0" style="height: 638px;" class="d-flex align-items-center justify-content-around" :description="false" />
             <Message 
               v-else 
-              :conversation="activeConversation" 
-              :message="listMessage" 
-              :user="user"
-              @send="sendMessage"
               @call="callVideo"
             />
 					</div>
@@ -28,7 +22,6 @@
 
     <div v-if="incomingCall" class="call-wraper active">
 	  	<div class="m-live-call">
-	  		<figure><img src="images/resources/author.jpg" alt=""></figure>
 	  		<div class="call-box">
 	  			<h6>Jack Carter</h6>
 	  			<span>incoming call</span>
@@ -40,53 +33,70 @@
 	  			</div>
 	  			<ins class="later-rmnd">Remind me later</ins>
 	  			<div class="yesorno">
+            <a @click="acceptCall" class="bg-purple decline-call" title=""><i class="fa fa-close"></i></a>
 	  				<a @click="cancelCall" class="bg-red decline-call" title=""><i class="fa fa-close"></i></a>
 	  			</div>
 	  		</div>
 	  	</div>
 	  </div><!-- audio video call popup -->		
 
-    <Call 
-      v-if="calling"
-      @cancel="cancelCalling"
-    />
-    <video id="localVideo" class="video__myself" autoplay></video>
+    <div v-if="calling" class="call-wraper active">
+	  	<div class="m-live-calling">
+	  		<div class="call-box">
+	  			<h6>Jack Carter</h6>
+	  			<span>incoming call</span>
+	  			<i class="ti-microphone"></i>
+	  			<div class="wave">
+	  				<span class="dot"></span>
+	  				<span class="dot"></span>
+	  				<span class="dot"></span>
+	  			</div>
+	  			<div class="yesorno">
+	  				<a @click="cancelCalling" class="bg-red decline-call" title=""><i class="fa fa-close"></i></a>
+	  			</div>
+	  		</div>
+        <div class="d-flex ">
+          <video ref="localVideo" class="video__myself" autoplay></video>
+          <template v-for="(peer, index) in peers">
+            <Video :key="index" :peer="peer"/>
+          </template>
+        </div>
+	  	</div>
+      
+	  </div><!-- audio video call popup -->
 	</section><!-- content -->
 </template>
 
 <script>
 import SideBar from "~/components/v-layout/SideBar"
 import Message from "~/components/Message"
-import Call from "~/components/Call"
+import Video from "~/components/Video"
+import { mapState } from 'vuex'
+import Peer from "simple-peer"
 import axios from "axios"
 import * as io from 'socket.io-client'
 
 export default {
-  middleware: "authentication",
   components: {
     SideBar, 
     Message, 
-    Call
+    Video
+  },
+
+  middleware({store, query}) {
+    store.commit('conversation/SET_QUERY', query)
+  },
+
+  async fetch() {
+    this.fetchData()
   },
 
   data() {
     return {
-      user: JSON.parse(localStorage.getItem("currentUser")), 
-      token: localStorage.getItem("token"), 
-      listConversations: [],
-      params: {
-        id: String
-      }, 
-      activeConversation: {}, 
-      listMessage: [],
-      socket: io('http://localhost:5000/Conversation'), 
-      socketNotify: io('http://localhost:5000/notifyIO'), 
+      socket: io('ws://78f90e8249d4.ngrok.io/Conversation'), 
+      socketNotify: io('ws://78f90e8249d4.ngrok.io/notifyIO'), 
       incomingCall: false,
       calling: false,
-      // videos
-      myVideo: {},
-      remoteVideo: {},
-      // Media config
       constraints: {
         audio: {
           echoCancellation: true,
@@ -98,255 +108,291 @@ export default {
           height: 348 
         }
       },
+      //local
+      localStream: null,
+
+      //peer
+      peers: [], 
+      peersRef: [],
+
+      //callee
+      roomCall: null,
     }
   },
 
   watch: {
-    'listConversations': function(value) {
+    '$store.state.conversation.list': function(value) {
       const query = this.$route.query;
       if(!query.id && this.listConversations.length > 0) {
-        this.params.id = this.listConversations[0]._id
+        this.$store.commit('conversation/SET_QUERY', { id: this.listConversations[0]._id})
         this.$router.push({name: this.$route.name, query: {...this.params} })
-        this.openConversation(this.params.id)
+        this.openConversation()
       }
     }
   },
 
+  computed: {
+    ...mapState({
+      user: (state) => state.auth.currentUser, 
+      token: (state) => state.auth.token, 
+      listConversations: (state) => state.conversation.list, 
+      params: (state) => state.conversation.query, 
+      activeConversation: (state) => state.conversation.activeConversation, 
+      listMessage:  (state) => state.conversation.listMessage,
+    })
+  },
+
   created() {
-    this.getListConversation();
     this.getQueryParams()
     this.joinUserNotify()
 
     this.socket.on('new-message-room', (data) => {
-      this.listMessage.push(data.returnMessage)
-      this.pushNewConversation(data.conversation)
+      this.$store.commit('conversation/ADD_MESSAGE', data.returnMessage)
+      this.$store.commit('conversation/CHANGE_INDEX_CONVERSATION', data.conversation)
     });
 
-    this.socket.on('notifyMessage', (data) => {
-      console.log(data);
-      this.pushNewConversation(data.conversation)
+    this.socketNotify.on('notifyMessage', (data) => {
+      this.$store.commit('conversation/CHANGE_INDEX_CONVERSATION', data.conversation)
+    });
+
+    this.socket.on('all users', (data) => {
+      const peers = [];
+      data.forEach(socketID => {
+        //socketID: client in room
+        const peer = this.createPeer(socketID, this.socket.id, this.localStream);
+        this.peersRef.push({
+          peerID: socketID,
+          peer,
+        })
+        peers.push(peer);
+      })
+      this.peers = peers
+      console.log(this.peers);
+    });
+
+    this.socketNotify.on('new call', (data) => {
+      this.incomingCall = true
+      this.roomCall = data
+    });
+
+    this.socket.on('user joined', (payload) => {
+      console.log("user joined");
+      console.log(payload);
+      // const item = this.peersRef.find(p => p.peerID === payload.callerID);
+      const peer = this.addPeer(payload.signal, payload.callerID, this.localStream);
+      this.peersRef.push({
+        peerID: payload.callerID,
+        peer,
+      })
+      
+      this.peers.push(peer)
+    });
+
+    this.socket.on('receiving returned signal', (payload) => {
+      console.log( "receive");
+      console.log(payload);
+      const item = this.peersRef.find(p => p.peerID === payload.id);
+      item.peer.signal(payload.signal);
     });
   },
 
   methods: {
+    handleError(err) {
+      this.$notification["error"]({
+        message: 'ERROR',
+        description:
+          err.message
+      });
+    },
+
+    async fetchData() {
+      try {
+        await this.$store.dispatch('conversation/fetchListData')
+        console.log(this.params);
+      }
+      catch(error) {
+        this.handleError(error)
+      }
+    },
+
     joinUserNotify() {
       this.socketNotify.emit('join', this.user._id)
     }, 
 
     joinRoom(id) {
-      this.socket.emit('join', id)
+      this.socket.emit('join',  id)
     },
 
     leftRoom(id) {
       this.socket.emit('left', id)
     },
 
-    pushNewConversation(conversation) {
-      this.listConversations = this.listConversations.filter(o => o._id !== conversation._id);
-      this.listConversations.unshift(conversation)
-    },
-
-    async getListConversation() {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/v1/listConversations`, {
-          headers: {
-            Authorization: 'Bearer ' + this.token,
-          }
-        })
-        if(response.data.status == "200") {
-          this.listConversations = response.data.data.listConversations
-        }
-      }
-      catch(e) {
-        this.$notification["error"]({
-          message: 'GET LIST CONVERSATION ERROR',
-          description:
-            e.message
-        });
-      }
-    },
-
     getQueryParams() {
-      const query = this.$route.query
-      if(query.id) {
-        this.params.id = query.id
-        this.joinRoom(query.id)
-        this.openConversation(query.id)
+      if(this.params.id) {
+        this.joinRoom(this.params.id)
+        this.openConversation()
       }
     },
 
     async fetchUser(value) {
       try {
-        this.$store.commit('conversation/SET_FETCHING_USER', true)
-        const response = await axios.post(`http://localhost:5000/api/v1/searchFriend`, {
-          searchText: value
-				},
-        {
-          headers: {
-            Authorization: 'Bearer ' + this.token,
-          }
-        }); 
-        this.$store.commit('conversation/SET_FETCHING_USER', false)
-        if(response.data.status == "200") {
-          this.$store.commit('conversation/SET_RETURN_DATA', response.data.data.listUser)
-        } 
+        await this.$store.dispatch('user/fetchListData', { value : value })
 			}
-			catch(e) {
+			catch(error) {
         this.$store.commit('conversation/SET_FETCHING_USER', false)
-        this.$notification["error"]({
-          message: 'SEARCH ERROR',
-          description:
-            e.message
-        });
+        this.handleError(error)
 			}
     },
 
     async addUser(value) {
       try {
-        const response = await axios.get(`http://localhost:5000/api/v1/checkExistConversation`,
-        {
-          params: {
-            userIds: value
-          },
-          headers: {
-            Authorization: 'Bearer ' + this.token,
-          }
-        })
-        if(response.data.status == "200") {
-          if(response.data.data.conversation != null) {
-            this.$store.commit('conversation/SET_EXIST_CONVERSATION', response.data.data.conversation)
-          }
-        }
+        await this.$store.dispatch('conversation/checkExist', { userIds : value })
       }
-      catch(e) {
-        this.$notification["error"]({
-          message: 'CHECK CONVERSATION ERROR',
-          description:
-            e.message
-        });
+      catch(error) {
+        this.handleError(error)
       }
     },
 
     async createConversation(createGroup) {
       try {
-		    if(!createGroup.groupName && createGroup.userIds.length >= 2) {
+        if(!createGroup.groupName && createGroup.userIds.length >= 2) {
           throw {message: "Ban phai dat ten nhom!"}
         }
         if(createGroup.userIds.length < 2) {
           delete createGroup.groupName
         }
-        const response = await axios.post(`http://localhost:5000/api/v1/createConversation`, createGroup,
-        {
-          headers: {
-            Authorization: 'Bearer ' + this.token,
-          }
-        })
-        if(response.data.status == "200") {
-          this.listConversations.unshift(response.data.data.conversation)
-          this.getConversation(this.listConversations[0]._id)
+        if(createGroup.userIds.length <= 0) {
+          throw {message: "Chon thanh vien!"}
         }
+        await this.$store.dispatch('conversation/create', { data : createGroup })
+        this.getConversation(this.listConversations[0]._id)
         this.$store.commit('conversation/SET_LOADING_MODAL', false)
         this.$store.commit('conversation/SET_VISIBLE_MODAL', false)
       }
-      catch(e) {
+      catch(error) {
         this.$store.commit('conversation/SET_LOADING_MODAL', false)
-        this.$notification["error"]({
-          message: 'CREATE ERROR',
-          description:
-            e.message
-        });
+        this.handleError(error)
       }
     },
 
     getConversation(value) {
-      const query = this.$route.query
-      this.params.id = value
+      console.log(this.listConversations);
+      this.$store.commit('conversation/SET_QUERY', { id: value})
       this.$router.push({name: this.$route.name, query: {...this.params} })
-      this.leftRoom(this.activeConversation._id)
+      if(this.activeConversation._id){
+        this.leftRoom(this.activeConversation._id)
+      }
       this.joinRoom(this.params.id)
-      this.openConversation(this.params.id)
+      this.openConversation()
     },
 
-    async openConversation(value) {
+    async openConversation() {
       try {
-        const response = await axios.get(`http://localhost:5000/api/v1/oneConversation`, 
-        {
-          params: {
-            roomId: value
-          },
-          headers: {
-            Authorization: 'Bearer ' + this.token,
-          }
-        })
-        this.$store.commit('conversation/SET_ACTIVE_CONVERSATION', value)
-        if(response.data.status == "200") {
-		      this.activeConversation = response.data.data.conversation
-          this.listMessage = response.data.data.message
-        }
+        await this.$store.dispatch('conversation/open')
       }
-      catch(e) {
-        this.$notification["error"]({
-          message: 'GET CONVERSATION ERROR',
-          description:
-            e.message
-        });
-      }
-    }, 
-
-    async sendMessage(value) {
-      try {
-        const response = await axios.post(`http://localhost:5000/api/v1/sendMessage`, { 
-          content: value, 
-          conversationID: this.params.id, 
-          userIds: this.activeConversation.userIds
-        },
-		    {
-        	headers: {
-        	  Authorization: 'Bearer ' + this.token,
-          }
-        })
-      }
-      catch(e) {
-        this.$notification["error"]({
-          message: 'SEND MESSAGE ERROR',
-          description:
-            e.message
-        });
+      catch(error) {
+        this.handleError(error)
       }
     }, 
 
     async getUserMedia() {
       if ("mediaDevices" in navigator) {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia(this.constraints);
-          const video = document.getElementById("localVideo");
-          video.srcObject = stream;
-          video.play()
+          return await navigator.mediaDevices.getUserMedia(this.constraints);
         } catch (error) {
-          console.log(`getUserMedia error: ${error}`);
+          throw error
         }
       }
     },
 
+    playStream(id, stream) {
+      const video = document.getElementById(id);
+      video.srcObject = stream;
+      video.play()
+    },
+
     async callVideo() {
-      this.calling = true;
-      await this.getUserMedia()
+      try {
+        this.calling = true
+        navigator.mediaDevices.getUserMedia(this.constraints).then(stream => {
+          this.localStream = stream
+          this.$refs.localVideo.srcObject = this.localStream
+          this.socket.emit('join call', this.activeConversation._id)
+          this.socketNotify.emit('notify call', { list: this.activeConversation, user: this.user})
+        })
+      } catch (error) {
+        this.handleError(error)
+      }
     }, 
 
-    acceptCall() {
-
+    async acceptCall() {
+      this.calling = true
+      this.incomingCall = false
+      navigator.mediaDevices.getUserMedia(this.constraints).then(stream => {
+        this.localStream = stream
+        this.$refs.localVideo.srcObject = this.localStream
+        this.socket.emit('join call', this.roomCall.roomID)
+      })
     }, 
 
     cancelCall() {
+      this.socket.emit('disconnect-call', this.roomCall.roomID)
       this.incomingCall = false
     }, 
 
-    acceptCalling() {
-
-    },
-
-    cancelCalling() {
+    async cancelCalling() {
+      if(this.roomCall) {
+        this.socket.emit('disconnect-call', { user: this.socket.id})
+      }
+      else {
+        this.socket.emit('disconnect-call',{ user: this.socket.id})
+      }
+      this.localStream.getTracks().forEach(function(track) {
+        track.stop();
+      });
       this.calling = false
+    }, 
+
+    //socketID: client in room
+    //callerID: ng goi
+    //stream: localStream
+    createPeer(socketID, callerID, stream) {
+      let count = 0
+      const peer = new Peer({
+          initiator: true,
+          trickle: false,
+          stream,
+      });
+
+      peer.on("signal", signal => {
+        console.log("create");
+        console.log(count++);
+        console.log(signal);
+        this.socket.emit("sending signal", { socketID, callerID, signal })
+      })
+
+      return peer;
+    }, 
+
+    //incomingSignal: signal user join
+    //callerID: ID user join
+    //stream:localStream
+    addPeer(incomingSignal, callerID, stream) {
+      let count = 0
+      const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          stream,
+      })
+      peer.on("signal", signal => {
+        console.log("add");
+        console.log(count++);
+        console.log(signal);
+          this.socket.emit("returning signal", { signal, callerID })
+      })
+
+      peer.signal(incomingSignal);
+      return peer;
     }
   }
 }

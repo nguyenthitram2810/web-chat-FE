@@ -96,14 +96,15 @@ export default {
         if (valid) {
           this.isDisabled = true
           try {
-            const response = await axios.post(`http://localhost:5000/api/v1/signin`, {
+            const response = await axios.post(`http://78f90e8249d4.ngrok.io/api/v1/signin`, {
               email: this.loginForm.email.trim(), 
               password: this.loginForm.password.trim(),
             });
             if(response.data.status == "200") {
               localStorage.setItem("currentUser", JSON.stringify(response.data.data.userInfo)); 
               localStorage.setItem("token", response.data.data.token); 
-              this.$store.dispatch("auth/setCurrent", { currentUser: JSON.parse(localStorage.getItem("currentUser")) });
+              this.$store.commit("auth/SET_CURRENT_USER", JSON.parse(localStorage.getItem("currentUser")));
+              this.$store.commit("auth/SET_TOKEN", localStorage.getItem("token"));
               this.$router.push("/");
             }
             else {

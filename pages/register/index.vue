@@ -134,7 +134,7 @@ export default {
           this.isDisabled = true;
           delete this.registerForm.confirmPass;
           try {
-            const response = await axios.post(`http://localhost:5000/api/v1/signup`, {
+            const response = await axios.post(`http://78f90e8249d4.ngrok.io/api/v1/signup`, {
               username: this.registerForm.username.trim(),
               email: this.registerForm.email.trim(), 
               password: this.registerForm.password.trim(),
@@ -142,8 +142,8 @@ export default {
             if(response.data.status == "200") {
               localStorage.setItem("currentUser", JSON.stringify(response.data.data.userInfo)); 
               localStorage.setItem("token", response.data.data.token); 
-              console.log(JSON.parse(localStorage.getItem("currentUser")))
-              this.$store.dispatch("auth/setCurrent", { currentUser: JSON.parse(localStorage.getItem("currentUser")) });
+              this.$store.commit("auth/SET_CURRENT_USER", JSON.parse(localStorage.getItem("currentUser")));
+              this.$store.commit("auth/SET_TOKEN", localStorage.getItem("token"));
               this.$router.push("/");
             }
             else {

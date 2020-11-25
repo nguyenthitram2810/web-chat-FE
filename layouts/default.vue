@@ -11,6 +11,7 @@ import BaseFooter from '~/components/v-layout/BaseFooter'
 
 export default {
   name: 'DefaultLayout',
+  middleware: "authentication",
   components: {
     BaseHeader,
     BaseFooter
