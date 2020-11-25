@@ -94,15 +94,13 @@ export default {
   data() {
     return {
       socket: io('ws://multimedia--chat-api.herokuapp.com/Conversation', {
-        withCredentials: true,
         extraHeaders: {
-          "my-custom-header": "abcd"
+          'Access-Control-Allow-Credentials': 'omit'
         }
       }), 
       socketNotify: io('ws://multimedia--chat-api.herokuapp.com/notifyIO', {
-        withCredentials: true,
         extraHeaders: {
-          "my-custom-header": "abcd"
+          'Access-Control-Allow-Credentials': 'omit'
         }
       }), 
       incomingCall: false,
