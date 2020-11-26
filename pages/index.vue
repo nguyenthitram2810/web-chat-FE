@@ -73,8 +73,7 @@ import Message from "~/components/Message"
 import Video from "~/components/Video"
 import { mapState } from 'vuex'
 import Peer from "simple-peer"
-import axios from "axios"
-import * as io from 'socket.io-client'
+import io from 'socket.io-client'
 
 export default {
   components: {
@@ -93,8 +92,8 @@ export default {
 
   data() {
     return {
-      socket: io('http://multimedia--chat-api.herokuapp.com/Conversation', {transports: ['websocket', 'polling', 'flashsocket']}), 
-      socketNotify: io('http://multimedia--chat-api.herokuapp.com/notifyIO', {transports: ['websocket', 'polling', 'flashsocket']}), 
+      socket: io.connect('https://multimedia--chat-api.herokuapp.com/Conversation'), 
+      socketNotify: io.connect('https://multimedia--chat-api.herokuapp.com/notifyIO'), 
       incomingCall: false,
       calling: false,
       constraints: {
@@ -149,6 +148,10 @@ export default {
     this.socket.on('new-message-room', (data) => {
       this.$store.commit('conversation/ADD_MESSAGE', data.returnMessage)
       this.$store.commit('conversation/CHANGE_INDEX_CONVERSATION', data.conversation)
+    });
+
+    this.socket.on('join room roi', (data) => {
+      console.log(data)
     });
 
     this.socketNotify.on('notifyMessage', (data) => {
@@ -220,6 +223,7 @@ export default {
     }, 
 
     joinRoom(id) {
+      
       this.socket.emit('join',  id)
     },
 
