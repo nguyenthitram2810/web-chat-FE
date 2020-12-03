@@ -21,7 +21,7 @@
 						<figure>
               <img v-if="d.avatar != undefined" :src="d.avatar" alt="">
               <template v-else v-for="el in d.userIds">
-                <img v-if="el._id != user._id" :key="el._id" :src="el.avatar">
+                <img v-if="(user != null) && (el._id != user._id)" :key="el._id" :src="el.avatar">
               </template>
 							<!-- <span class="status"></span> -->
 						</figure>
@@ -29,10 +29,10 @@
 							<h6 class="" v-if="d.groupName != undefined">{{ d.groupName }}</h6>
               <h6 v-else>
                 <template v-for="el in d.userIds">
-                  <span v-if="el._id != user._id"  :key="el._id"> {{ el.username }}</span>
+                  <span v-if="(user != null) && (el._id != user._id)"  :key="el._id"> {{ el.username }}</span>
                 </template>
               </h6>
-              <span class="truncate-2-line" v-if="d.lastUser != undefined">{{ d.lastUser._id == user._id ? 'you: ' : `${d.lastUser.username}: ` }}{{ d.lastMessage }}</span>
+              <span class="truncate-2-line" v-if="d.lastUser != undefined">{{ (user != null) && (d.lastUser._id == user._id) ? 'you: ' : `${d.lastUser.username}: ` }}{{ d.lastMessage }}</span>
 						</div>
 					</a>
 				</li>

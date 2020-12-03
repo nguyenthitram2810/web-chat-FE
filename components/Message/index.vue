@@ -8,14 +8,14 @@
               <figure>
                 <img v-if="conversation.avatar != undefined" :src="conversation.avatar" alt="">
                 <template v-else v-for="el in conversation.userIds">
-                  <img v-if="el._id != user._id" :key="el._id" :src="el.avatar">
+                  <img v-if=" (user != null) && (el._id != user._id)" :key="el._id" :src="el.avatar">
                 </template>
               </figure>
 							<div>
 								<h6 v-if="conversation.groupName != undefined" class="unread"> {{ conversation.groupName }}</h6>
                 <h6 v-else class="unread"> 
                   <template v-for="el in conversation.userIds">
-                    <span v-if="el._id != user._id"  :key="el._id"> {{ el.username }}</span>
+                    <span v-if="(user != null) && (el._id != user._id)"  :key="el._id"> {{ el.username }}</span>
                   </template> 
                 </h6>
 							</div>
@@ -31,7 +31,7 @@
 				<div class="col-lg-8 col-md-8">
 					<div class="mesge-area">
 						<ul ref="conversations" class="conversations">
-							<li v-for="(msg, index) in message" :key="index" :class="msg.memberId[0]._id == user._id ? 'me' : 'you'">
+							<li v-for="(msg, index) in message" :key="index" :class="(user != null) && (msg.memberId[0]._id == user._id) ? 'me' : 'you'">
 								<figure><img :src="msg.memberId[0].avatar" alt=""></figure>
 								<div class="text-box">
 									<p>{{msg.content}}</p>
