@@ -85,7 +85,6 @@ export default {
     },
 
     searchMessage(event) {
-			console.log(this.searchText)
     }, 
     fetchUser(value) {
       this.$emit('fetchUser', value)

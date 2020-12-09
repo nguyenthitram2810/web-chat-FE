@@ -123,9 +123,7 @@ export default {
     '$store.state.conversation.list': function(value) {
       const query = this.$route.query;
       if(!query.id && this.listConversations.length > 0) {
-        this.$store.commit('conversation/SET_QUERY', { id: this.listConversations[0]._id})
-        this.$router.push({name: this.$route.name, query: {...this.params} })
-        this.openConversation()
+        this.getConversation(this.listConversations[0]._id)
       }
     }
   },
@@ -170,7 +168,6 @@ export default {
         peers.push(peer);
       })
       this.peers = peers
-      console.log(this.peers);
     });
 
     this.socketNotify.on('new call', (data) => {
@@ -179,9 +176,6 @@ export default {
     });
 
     this.socket.on('user joined', (payload) => {
-      console.log("user joined");
-      console.log(payload);
-      // const item = this.peersRef.find(p => p.peerID === payload.callerID);
       const peer = this.addPeer(payload.signal, payload.callerID, this.localStream);
       this.peersRef.push({
         peerID: payload.callerID,
@@ -192,8 +186,6 @@ export default {
     });
 
     this.socket.on('receiving returned signal', (payload) => {
-      console.log( "receive");
-      console.log(payload);
       const item = this.peersRef.find(p => p.peerID === payload.id);
       item.peer.signal(payload.signal);
     });
@@ -211,7 +203,6 @@ export default {
     async fetchData() {
       try {
         await this.$store.dispatch('conversation/fetchListData')
-        console.log(this.params);
       }
       catch(error) {
         this.handleError(error)
@@ -223,7 +214,6 @@ export default {
     }, 
 
     joinRoom(id) {
-      
       this.socket.emit('join',  id)
     },
 
@@ -233,7 +223,6 @@ export default {
 
     getQueryParams() {
       if(this.params.id) {
-        this.joinRoom(this.params.id)
         this.openConversation()
       }
     },
@@ -280,7 +269,6 @@ export default {
     },
 
     getConversation(value) {
-      console.log(this.listConversations);
       this.$store.commit('conversation/SET_QUERY', { id: value})
       this.$router.push({name: this.$route.name, query: {...this.params} })
       if(this.activeConversation._id){
@@ -369,9 +357,6 @@ export default {
       });
 
       peer.on("signal", signal => {
-        console.log("create");
-        console.log(count++);
-        console.log(signal);
         this.socket.emit("sending signal", { socketID, callerID, signal })
       })
 
@@ -389,9 +374,6 @@ export default {
           stream,
       })
       peer.on("signal", signal => {
-        console.log("add");
-        console.log(count++);
-        console.log(signal);
           this.socket.emit("returning signal", { signal, callerID })
       })
 

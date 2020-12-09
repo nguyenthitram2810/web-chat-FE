@@ -85,7 +85,6 @@ export const actions = {
           Authorization: 'Bearer ' + rootState.auth.token,
         }
       })
-      console.log(response);
       if(response.data.status == "200") {
         commit('SET_ACTIVE_CONVERSATION', response.data.data.conversation)
         commit('SET_LIST_MESSAGE', response.data.data.message)
@@ -104,7 +103,6 @@ export const actions = {
         }
       })
       if(response.data.status == "200") {
-        console.log(response);
         commit('PUSH_CONVERSATION', response.data.data.conversation)
       }
     } catch (err) {
