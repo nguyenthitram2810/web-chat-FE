@@ -80,8 +80,8 @@ export default {
 
   data() {
     return {
-      socket: io.connect('http://localhost:5000/Conversation'), 
-      socketNotify: io.connect('http://localhost:5000/notifyIO'), 
+      socket: io.connect('https://multimedia--chat-api.herokuapp.com/Conversation'), 
+      socketNotify: io.connect('https://multimedia--chat-api.herokuapp.com/notifyIO'), 
       incomingCall: false,
       calling: false,
       constraints: {
