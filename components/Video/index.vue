@@ -1,5 +1,5 @@
 <template>
-  <video ref="remotelVideo" class="video__myself" autoplay></video>
+  <video ref="remotelVideo" class="col video__remote m-auto" autoplay></video>
 </template>
 <script>
 export default {

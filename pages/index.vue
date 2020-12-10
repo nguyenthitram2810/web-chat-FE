@@ -25,44 +25,32 @@
 	  		<div class="call-box">
 	  			<h6>{{ caller.username }}</h6>
 	  			<span>incoming call</span>
-	  			<i class="ti-microphone"></i>
 	  			<div class="wave">
 	  				<span class="dot"></span>
 	  				<span class="dot"></span>
 	  				<span class="dot"></span>
 	  			</div>
-	  			<ins class="later-rmnd">Remind me later</ins>
 	  			<div class="yesorno">
-            <a @click="acceptCall" class="bg-purple decline-call" title=""><i class="fa fa-close"></i></a>
-	  				<a @click="cancelCall" class="bg-red decline-call" title=""><i class="fa fa-close"></i></a>
+            <a @click="acceptCall" class="bg-purple decline-call" title=""><a-icon type="phone" /></a>
+	  				<a @click="cancelCall" class="bg-red decline-call" title=""><i class="fas fa-times"></i></a>
 	  			</div>
 	  		</div>
 	  	</div>
 	  </div><!-- audio video call popup -->		
 
     <div v-if="calling" class="call-wraper active">
-	  	<div class="m-live-calling">
-	  		<div class="call-box">
-	  			<h6>Jack Carter</h6>
-	  			<span>incoming call</span>
-	  			<i class="ti-microphone"></i>
-	  			<div class="wave">
-	  				<span class="dot"></span>
-	  				<span class="dot"></span>
-	  				<span class="dot"></span>
-	  			</div>
-	  			<div class="yesorno">
-	  				<a @click="cancelCalling" class="bg-red decline-call" title=""><i class="fa fa-close"></i></a>
-	  			</div>
+	  	<div style="background:black;" class="m-live-calling">
+	  		<div class="yesorno cancel-calling">
+	  			<a @click="cancelCalling" class="bg-red decline-call" title=""><a-icon type="phone" /></a>
 	  		</div>
-        <div class="d-flex">
-          <video ref="localVideo" class="video__myself" autoplay></video>
-          <template v-for="(peer, index) in peers">
-            <Video :key="index" :peer="peer"/>
+        <video ref="localVideo" class="video__myself" autoplay muted></video>
+
+        <div class="row align-items-center">
+          <template v-for="(peersRef, index) in peersRef">
+            <Video :key="index" :peer="peersRef.peer"/>
           </template>
         </div>
 	  	</div>
-      
 	  </div><!-- audio video call popup -->
 	</section><!-- content -->
 </template>
@@ -92,8 +80,8 @@ export default {
 
   data() {
     return {
-      socket: io.connect('https://multimedia--chat-api.herokuapp.com/Conversation'), 
-      socketNotify: io.connect('https://multimedia--chat-api.herokuapp.com/notifyIO'), 
+      socket: io.connect('http://localhost:5000/Conversation'), 
+      socketNotify: io.connect('http://localhost:5000/notifyIO'), 
       incomingCall: false,
       calling: false,
       constraints: {
@@ -188,6 +176,15 @@ export default {
       const item = this.peersRef.find(p => p.peerID === payload.id);
       item.peer.signal(payload.signal);
     });
+
+    this.socket.on('user-cancel-calling', ( payload ) => {
+      const item = this.peersRef.find(p => p.peerID === payload.id);
+      item.peer.destroy();
+      this.peersRef = this.peersRef.filter(p => p.peerID != payload.id);
+      if(this.peersRef.length == 0) {
+        this.closeLocalVideo()
+      }
+    })
   },
 
   methods: {
@@ -327,22 +324,25 @@ export default {
     }, 
 
     cancelCall() {
-      this.socket.emit('disconnect-call', this.roomCall)
+      // this.socket.emit('disconnect-call', this.roomCall)
       this.incomingCall = false
     }, 
 
     async cancelCalling() {
-      if(this.roomCall) {
-        this.socket.emit('disconnect-call', { user: this.socket.id})
+      if(this.peers) {
+        this.roomCall = null
+        this.peersRef = []
+        this.socket.emit('disconnect-call');
       }
-      else {
-        this.socket.emit('disconnect-call',{ user: this.socket.id})
-      }
+      this.closeLocalVideo()
+    }, 
+
+    closeLocalVideo() {
       this.localStream.getTracks().forEach(function(track) {
         track.stop();
       });
       this.calling = false
-    }, 
+    },
 
     //socketID: client in room
     //callerID: ng goi

@@ -15841,12 +15841,9 @@ a.shopping-cart > i {
 .m-live-calling {
     background: #fff none repeat scroll 0 0;
     display: block;
-    left: 50%;
     margin: 0 auto;
     padding: 20px;
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
     width: 100%;
     height: 100%;
 }
@@ -21857,4 +21854,26 @@ a.btn2:hover,
 
 .row {
     margin: 0!important;
+}
+
+.cancel-calling {
+    position: absolute;
+    bottom: 3%;
+    left: 50%;  
+    transform: translateX(-50%);
+}
+
+.video__myself {
+    position: absolute;
+    bottom: -1%;
+    left: 100%;  
+    transform: translateX(-108%);
+    width: 200px;
+    height: 200px;
+}
+
+.video__remote {
+    position: relative;
+    max-width: 600px;
+    max-height: 600px;
 }
