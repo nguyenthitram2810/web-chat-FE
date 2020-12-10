@@ -324,7 +324,6 @@ export default {
     }, 
 
     cancelCall() {
-      // this.socket.emit('disconnect-call', this.roomCall)
       this.incomingCall = false
     }, 
 

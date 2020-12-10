@@ -50,18 +50,21 @@
 
 				<div class="col-lg-4 col-md-4">
 					<div class="chater-info">
-						<figure><img src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" alt=""></figure>
-						<h6>Andrew</h6>
-						<span>Online</span>
+						<figure>
+              <img v-if="conversation.avatar != undefined" :src="conversation.avatar" alt="">
+              <template v-else v-for="el in conversation.userIds">
+                <img v-if=" (user != null) && (el._id != user._id)" :key="el._id" :src="el.avatar">
+              </template>
+            </figure>
+						<h6 v-if="conversation.groupName != undefined"> {{ conversation.groupName }}</h6>
+            <h6 v-else> 
+              <template v-for="el in conversation.userIds">
+                <span v-if="(user != null) && (el._id != user._id)"  :key="el._id"> {{ el.username }}</span>
+              </template> 
+            </h6>
 						<div class="userabout">
 							<span>About</span>
-							<p>I love reading, traveling and discovering new things. You need to be happy in life.</p>
-							<ul>
-								<li><span>Phone:</span> +123976980</li>
-								<li><span>Website:</span> <a href="#" title="">www.abc.com</a></li>
-								<li><span>Email:</span> <a href="http://wpkixx.com/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1c6f7d716c70795c7b717d7570327f7371">[email&#160;protected]</a></li>
-								<li><span>Phone:</span> Ontario, Canada</li>
-							</ul>
+							<p>Something about this conversation</p>
 						</div>
 					</div>
 				</div>
