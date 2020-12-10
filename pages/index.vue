@@ -23,7 +23,7 @@
     <div v-if="incomingCall" class="call-wraper active">
 	  	<div class="m-live-call">
 	  		<div class="call-box">
-	  			<h6>Jack Carter</h6>
+	  			<h6>{{ caller.username }}</h6>
 	  			<span>incoming call</span>
 	  			<i class="ti-microphone"></i>
 	  			<div class="wave">
@@ -55,7 +55,7 @@
 	  				<a @click="cancelCalling" class="bg-red decline-call" title=""><i class="fa fa-close"></i></a>
 	  			</div>
 	  		</div>
-        <div class="d-flex ">
+        <div class="d-flex">
           <video ref="localVideo" class="video__myself" autoplay></video>
           <template v-for="(peer, index) in peers">
             <Video :key="index" :peer="peer"/>
@@ -116,6 +116,9 @@ export default {
 
       //callee
       roomCall: null,
+
+      //Info caller
+      caller: ""
     }
   },
 
@@ -148,10 +151,6 @@ export default {
       this.$store.commit('conversation/CHANGE_INDEX_CONVERSATION', data.conversation)
     });
 
-    this.socket.on('join room roi', (data) => {
-      console.log(data)
-    });
-
     this.socketNotify.on('notifyMessage', (data) => {
       this.$store.commit('conversation/CHANGE_INDEX_CONVERSATION', data.conversation)
     });
@@ -159,7 +158,6 @@ export default {
     this.socket.on('all users', (data) => {
       const peers = [];
       data.forEach(socketID => {
-        //socketID: client in room
         const peer = this.createPeer(socketID, this.socket.id, this.localStream);
         this.peersRef.push({
           peerID: socketID,
@@ -172,7 +170,8 @@ export default {
 
     this.socketNotify.on('new call', (data) => {
       this.incomingCall = true
-      this.roomCall = data
+      this.roomCall = data.roomID
+      this.caller = data.userCall
     });
 
     this.socket.on('user joined', (payload) => {
@@ -323,12 +322,12 @@ export default {
       navigator.mediaDevices.getUserMedia(this.constraints).then(stream => {
         this.localStream = stream
         this.$refs.localVideo.srcObject = this.localStream
-        this.socket.emit('join call', this.roomCall.roomID)
+        this.socket.emit('join call', this.roomCall)
       })
     }, 
 
     cancelCall() {
-      this.socket.emit('disconnect-call', this.roomCall.roomID)
+      this.socket.emit('disconnect-call', this.roomCall)
       this.incomingCall = false
     }, 
 
