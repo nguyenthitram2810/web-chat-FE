@@ -32,6 +32,7 @@
 					<div class="mesge-area">
 						<ul ref="conversations" class="conversations">
 							<li v-for="(msg, index) in message" :key="index" :class="(user != null) && (msg.memberId[0]._id == user._id) ? 'me' : 'you'">
+                <div><span class="my-0 font--10">{{msg.memberId[0].username}}</span></div>
 								<figure><img :src="msg.memberId[0].avatar" alt=""></figure>
 								<div class="text-box">
 									<p>{{msg.content}}</p>
