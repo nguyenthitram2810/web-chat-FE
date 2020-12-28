@@ -163,6 +163,8 @@ export default {
     });
 
     this.socket.on('user joined', (payload) => {
+      console.log("join");
+      console.log(payload);
       const peer = this.addPeer(payload.signal, payload.callerID, this.localStream);
       this.peersRef.push({
         peerID: payload.callerID,
@@ -173,6 +175,8 @@ export default {
     });
 
     this.socket.on('receiving returned signal', (payload) => {
+      console.log("receving");
+      console.log(payload);
       const item = this.peersRef.find(p => p.peerID === payload.id);
       item.peer.signal(payload.signal);
     });
@@ -355,6 +359,8 @@ export default {
       });
 
       peer.on("signal", signal => {
+        console.log("create");
+        console.log(signal);
         this.socket.emit("sending signal", { socketID, callerID, signal })
       })
 
@@ -372,6 +378,8 @@ export default {
           stream,
       })
       peer.on("signal", signal => {
+        console.log("add");
+        console.log(signal);
           this.socket.emit("returning signal", { signal, callerID })
       })
 
